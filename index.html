@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Secret Chaos — Trust Nobody</title>
+<script src="/socket.io/socket.io.js"></script>
+<style>
+:root{--bg:#100c1c;--panel:#1b1530;--panel2:#241a3d;--ink:#f8f4ff;--muted:#b6aacd;--pink:#ff4fa3;--orange:#ffb45e;--green:#6ef0b2;--red:#ff647c;--line:#493760}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(ellipse at top,#38204d 0,#160f27 45%,#0d0a16 100%);color:var(--ink);font:16px/1.45 system-ui,-apple-system,Segoe UI,sans-serif}
+button,input{font:inherit}button{border:0;border-radius:13px;padding:12px 16px;background:linear-gradient(135deg,var(--pink),#a45cff);color:white;font-weight:800;cursor:pointer;box-shadow:0 7px 22px #0004}button:disabled{opacity:.45;cursor:not-allowed}button.secondary{background:#34264b;box-shadow:none;border:1px solid var(--line)}button.good{background:linear-gradient(135deg,#28bb8b,#68d8b5);color:#101a20}button.danger{background:linear-gradient(135deg,#ff647c,#ff9a70)}input{width:100%;padding:13px;border-radius:12px;border:1px solid var(--line);background:#100c1c;color:white;outline:none}
+.wrap{max-width:1050px;margin:auto;padding:24px 16px 50px}.top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:24px}.brand{font-size:clamp(1.4rem,4vw,2.3rem);font-weight:1000;letter-spacing:-1px}.brand span{color:var(--pink)}.badge{border:1px solid #644d80;background:#241935;border-radius:999px;padding:7px 12px;color:#e2d4f8;font-size:.8rem}
+.hero{text-align:center;padding:32px 10px 25px}.eyebrow{color:var(--orange);font-weight:900;text-transform:uppercase;letter-spacing:2px;font-size:.78rem}.hero h1{font-size:clamp(2.6rem,9vw,5.7rem);line-height:.95;letter-spacing:-3px;margin:12px 0}.hero h1 em{font-style:normal;color:var(--pink)}.hero p{color:var(--muted);max-width:570px;margin:16px auto 0}.panel{background:linear-gradient(160deg,#211832ee,#171124f5);border:1px solid var(--line);border-radius:22px;padding:22px;box-shadow:0 16px 45px #0003}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.panel h2{margin:0 0 8px;font-size:1.25rem}.muted{color:var(--muted)}.form{display:grid;gap:11px;margin-top:15px}.notice{min-height:24px;color:var(--orange);font-weight:700;margin:10px 0}.hidden{display:none!important}.lobbyhead{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px}.roomcode{font-size:2rem;letter-spacing:5px;font-weight:1000;color:var(--orange)}.players{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:16px}.player{background:#120e20;border:1px solid var(--line);border-radius:14px;padding:13px}.player .name{font-weight:800;overflow-wrap:anywhere}.tag{font-size:.72rem;color:var(--green);font-weight:800}.gamegrid{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(250px,1fr);gap:16px}.timer{font-size:2rem;font-weight:1000;color:var(--orange)}.missiontitle{font-size:1.8rem;margin:6px 0}.actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:18px}.actions button{min-height:74px}.feed{display:grid;gap:9px;margin-top:15px}.feeditem{background:#120e20;border-radius:12px;padding:12px;border-left:3px solid var(--pink)}.preset{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}.preset button{font-size:.8rem;padding:9px 11px}.scoreline{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid #ffffff12;gap:12px}.rolecard{border-radius:16px;padding:15px;background:linear-gradient(135deg,#3a1e4a,#1c1530);border:1px solid #80559b;margin:12px 0}.rolecard.traitor{border-color:var(--red);background:linear-gradient(135deg,#4a1d36,#1c1530)}.bigresult{text-align:center;font-size:2rem;font-weight:1000;color:var(--orange)}.footer{text-align:center;color:#8d80a5;font-size:.8rem;margin-top:26px}
+@media(max-width:720px){.grid,.gamegrid{grid-template-columns:1fr}.wrap{padding:14px 12px 35px}.hero{padding-top:20px}.panel{padding:17px}.actions{grid-template-columns:1fr 1fr}.top{align-items:flex-start}}
+</style>
+</head>
+<body><div class="wrap">
+<header class="top"><div class="brand">🎭 SECRET <span>CHAOS</span></div><div class="badge">2–8 PLAYERS · NO ELIMINATIONS</div></header>
+<section id="home">
+ <div class="hero"><div class="eyebrow">REAL-TIME SOCIAL DEDUCTION · 2–8 PLAYERS</div><h1>TRUST <em>NOBODY.</em></h1><p>One secret Saboteur. Two missions. Two private votes. Complete challenges, read your friends, and survive the chaos.</p></div>
+ <div class="grid">
+  <div class="panel"><h2>🚪 Create a room</h2><p class="muted">Become the host. Invite up to seven suspicious friends.</p><div class="form"><input id="createName" maxlength="18" placeholder="Your nickname" value=""><button id="createBtn">Create private room →</button></div></div>
+  <div class="panel"><h2>🔑 Join your friends</h2><p class="muted">Enter the room code and pick a nickname.</p><div class="form"><input id="joinName" maxlength="18" placeholder="Your nickname"><input id="joinCode" maxlength="6" placeholder="ROOM CODE" style="text-transform:uppercase;letter-spacing:3px"><button id="joinBtn">Join room →</button></div></div>
+ </div>
+ <div class="panel" style="margin-top:16px"><h2>📜 How to play — clear rules</h2><div class="scoreline"><span>Players & roles</span><strong>2–8 players · exactly 1 Saboteur</strong></div><div class="scoreline"><span>Each round</span><strong>Mission 20s → discuss 20s → vote 10s</strong></div><div class="scoreline"><span>Agent victory</span><strong>At least 1 mission succeeds + Saboteur uniquely tops either vote</strong></div><div class="scoreline"><span>Saboteur victory</span><strong>Agents fail either requirement by the end of round 2</strong></div><div class="scoreline"><span>Ties & elimination</span><strong>Tied vote = no one identified; nobody is eliminated</strong></div><p class="muted">Scoring: +100 for an Agent helping a successful mission; +100 for Saboteur sabotage; +250 for voting for the Saboteur; +150 for the Saboteur surviving a vote; +200 for each member of the winning team.</p></div>
+ <div id="homeNotice" class="notice"></div>
+</section>
+<section id="lobby" class="hidden">
+ <div class="panel"><div class="lobbyhead"><div><div class="eyebrow">Private lobby</div><h2>Send this code to your crew</h2><div class="roomcode" id="roomCode">------</div></div><button class="secondary" id="copyCode">Copy invite code</button></div><p class="muted">Everyone opens the same game URL on their own device, then joins with this code.</p><div class="players" id="lobbyPlayers"></div><div class="notice" id="lobbyNotice"></div><div class="form"><button class="good" id="readyBtn">✓ I'm ready</button><button id="startBtn" class="hidden">Start the betrayal →</button></div></div>
+</section>
+<section id="game" class="hidden">
+ <div class="lobbyhead" style="margin-bottom:14px"><div><div class="eyebrow" id="phaseLabel">Mission phase</div><h2 id="roundLabel">Round 1 of 2</h2></div><div class="timer" id="timer">30s</div></div>
+ <div id="roleCard" class="rolecard hidden"></div>
+ <div class="gamegrid">
+  <div class="panel"><div class="badge" id="roundBadge">MISSION 01</div><h2 class="missiontitle" id="missionTitle">Reactor Room</h2><p id="missionPrompt" class="muted">Stabilize the reactor before it goes BOOM.</p><div id="missionActions" class="actions"><button class="good" id="helpBtn">🛠️ Help the mission</button><button class="danger hidden" id="sabotageBtn">😈 Sabotage!</button></div><p class="notice" id="actionNotice"></p><div id="voteArea" class="hidden"><h2>🗳️ Who's acting sus?</h2><p class="muted">Choose one player. Votes stay secret until voting ends.</p><div id="votePlayers" class="players"></div></div><div id="resultArea" class="hidden"><h2 id="resultTitle"></h2><p id="resultText" class="muted"></p></div><div id="presetArea"><h3>💬 Say something suspicious</h3><p class="muted">Quick reactions you can copy into your group chat or say out loud.</p><div class="preset" id="presetMessages"></div></div></div>
+  <div class="panel"><h2>🕵️ The suspect board</h2><p class="muted">Nobody is eliminated. Suspicion is just a social burden.</p><div id="scoreboard"></div><h2 style="margin-top:22px">📜 Mission history</h2><div class="feed" id="history"></div></div>
+ </div>
+</section>
+<section id="finished" class="hidden"><div class="panel"><div class="eyebrow">Final reveal</div><div class="bigresult" id="winnerTitle">THE MASKS COME OFF</div><p id="winnerText" class="muted"></p><h2>🏆 Final leaderboard</h2><div id="finalBoard"></div><div class="form"><button id="playAgain">Back to home</button></div></div></section>
+<div class="footer">Made for chaotic friendships. Accuse responsibly. 🦝</div>
+</div>
+<script>
+const socket = io();
+let myId=null, roomCode=null, isHost=false, myRole=null, latest=null, selectedAction=false, voted=false, timerInt=null;
+const $=id=>document.getElementById(id);
+function show(section){["home","lobby","game","finished"].forEach(s=>$(s).classList.toggle("hidden",s!==section))}
+function notify(id,msg){$(id).textContent=msg||""}
+function emitAck(event,data){return new Promise(resolve=>socket.emit(event,data||{},resolve))}
+socket.on("connect",()=>{myId=socket.id});
+socket.on("private",d=>{myRole=d.role; renderRole();});
+socket.on("state",state=>{const prev=latest?.phase;if(state.phase==="mission"&&prev!=="mission"){selectedAction=false;voted=false;}if(state.phase==="vote"&&prev!=="vote")voted=false;latest=state;roomCode=state.code;isHost=state.hostId===myId;render(state);});
+function renderRole(){
+ if(!myRole)return;
+ const card=$("roleCard");card.classList.remove("hidden");card.classList.toggle("traitor",myRole==="saboteur");
+ card.innerHTML=`<strong>${myRole==="saboteur"?"😈 YOUR SECRET ROLE: SABOTEUR":"🕵️ YOUR SECRET ROLE: AGENT"}</strong><p>${myRole==="saboteur"?"Sabotage missions and survive both votes.":"Complete at least one mission and identify the Saboteur in either vote."}</p><small>This role is private on your device.</small>`;
+}
+function render(s){
+ if(s.phase==="lobby") show("lobby"); else if(s.phase==="finished") show("finished"); else show("game");
+ $("roomCode").textContent=s.code;
+ $("lobbyPlayers").innerHTML=s.players.map(p=>`<div class="player"><div class="name">${esc(p.name)} ${p.id===s.hostId?"👑":""}</div><div class="tag">${p.ready?"READY ✓":"NOT READY…"}</div>${p.connected?"":"<div class='muted'>Reconnecting…</div>"}</div>`).join("");
+ $("readyBtn").classList.toggle("hidden",s.phase!=="lobby"||s.players.find(p=>p.id===myId)?.ready);
+ $("startBtn").classList.toggle("hidden",s.phase!=="lobby"||!isHost);
+ $("startBtn").disabled=s.players.length<2||s.players.some(p=>!p.ready);
+ notify("lobbyNotice",s.players.length<2?"Waiting for at least 2 players…":s.players.some(p=>!p.ready)?"Waiting for everyone to be ready.":"Everyone's ready. Host, unleash the chaos.");
+ if(s.phase==="lobby") return;
+ if(s.phase==="finished"){renderFinal(s.final);return;}
+ $("phaseLabel").textContent=({mission:"MISSION IN PROGRESS",discussion:"DISCUSSION · 20 SECONDS",vote:"PRIVATE VOTE · 10 SECONDS",results:"ROUND RESULTS"})[s.phase]||"GAME IN PROGRESS";
+ $("roundLabel").textContent=`Round ${s.round} of 2`;
+ $("roundBadge").textContent=`MISSION ${String(s.round).padStart(2,"0")}`;
+ if(s.mission){$("missionTitle").textContent=s.mission.title;$("missionPrompt").textContent=s.mission.prompt;}
+ $("missionActions").classList.toggle("hidden",s.phase!=="mission");
+ $("voteArea").classList.toggle("hidden",s.phase!=="vote");
+ $("resultArea").classList.toggle("hidden",s.phase!=="results"&&s.phase!=="discussion");
+ $("resultTitle").textContent=s.phase==="discussion"?"🗣️ Discuss the disaster":s.phase==="results"?"📢 Round results":"";
+ const last=s.missionHistory[s.missionHistory.length-1];
+ $("resultText").textContent=s.phase==="discussion"&&last?`Mission ${last.success?"succeeded":"failed"}. Talk it out! Voting starts when the timer runs out.`:s.phase==="results"?s.message:"";
+ $("helpBtn").disabled=selectedAction||s.phase!=="mission";
+ $("sabotageBtn").classList.toggle("hidden",myRole!=="saboteur");
+ $("sabotageBtn").disabled=selectedAction||s.phase!=="mission";
+ $("actionNotice").textContent=selectedAction?"Action submitted. Wait for the mission to resolve.":s.phase==="mission"?"Choose an action before time runs out.":"";
+ if(s.phase==="vote"){
+   $("votePlayers").innerHTML=s.players.filter(p=>p.id!==myId).map(p=>`<button class="secondary" ${voted?"disabled":""} data-vote="${p.id}">🕵️ ${esc(p.name)}${p.suspicion?" · SUS ×"+p.suspicion:""}</button>`).join("");
+   document.querySelectorAll("[data-vote]").forEach(b=>b.onclick=async()=>{const r=await emitAck("vote",{target:b.dataset.vote});if(r?.ok){voted=true;notify("actionNotice","Vote locked in. Your secret is safe.");render(latest)}else notify("actionNotice",r?.error||"Vote failed")});
+ }
+ $("scoreboard").innerHTML=s.players.slice().sort((a,b)=>b.score-a.score).map(p=>`<div class="scoreline"><span>${esc(p.name)} ${p.id===myId?"(you)":""} ${p.suspicion?"🟠".repeat(Math.min(3,p.suspicion)):""}</span><strong>${p.score} pts</strong></div>`).join("");
+ $("history").innerHTML=s.missionHistory.slice().reverse().map(m=>`<div class="feeditem"><strong>${m.success?"✅":"💥"} R${m.round}: ${esc(m.title)}</strong><br><span class="muted">${m.success?"Mission complete":"Mission failed"} · ${m.helpers} helpers · ${m.sabotages} sabotage(s)</span></div>`).join("")||"<p class='muted'>No missions yet.</p>";
+ $("presetMessages").innerHTML=(s.presetMessages||[]).map(m=>`<button class="secondary" data-preset="${esc(m)}">${esc(m)}</button>`).join("");
+ document.querySelectorAll("[data-preset]").forEach(b=>b.onclick=()=>{navigator.clipboard?.writeText(b.dataset.preset);notify("actionNotice","Reaction copied — send it to your friends!");});
+ clearInterval(timerInt); updateTimer(s.deadline);
+ timerInt=setInterval(()=>updateTimer(s.deadline),250);
+ if(s.phase==="mission"&&!selectedAction) $("actionNotice").textContent="Choose an action before time runs out.";
+}
+function updateTimer(deadline){if(!deadline){$("timer").textContent="—";return}const n=Math.max(0,Math.ceil((deadline-Date.now())/1000));$("timer").textContent=n+"s";}
+function renderFinal(f){
+ if(!f)return;
+ $("winnerTitle").textContent=f.teamWinner==="AGENTS"?"🕵️ AGENTS WIN!":"😈 SABOTEUR WINS!";
+ $("winnerText").textContent=`${f.explanation} Successful missions: ${f.missionSuccesses}/2 (at least 1 required).`;
+ $("finalBoard").innerHTML=f.players.map((p,i)=>`<div class="scoreline"><span>${["🥇","🥈","🥉"][i]||"🎭"} ${esc(p.name)} — ${p.role==="saboteur"?"😈 Saboteur":"🕵️ Agent"}</span><strong>${p.score} pts</strong></div>`).join("");
+}
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
+$("createBtn").onclick=()=>{const name=$("createName").value.trim()||"Host";socket.emit("createRoom",{name},r=>{if(!r?.ok)notify("homeNotice",r?.error||"Could not create room.");else{roomCode=r.code;isHost=true;selectedAction=false;voted=false;show("lobby");$("roomCode").textContent=r.code;}})};
+$("joinBtn").onclick=()=>{const name=$("joinName").value.trim()||"Player",code=$("joinCode").value.trim().toUpperCase();socket.emit("joinRoom",{name,code},r=>{if(!r?.ok)notify("homeNotice",r?.error||"Could not join room.");else{roomCode=r.code;selectedAction=false;voted=false;show("lobby");}})};
+$("readyBtn").onclick=()=>socket.emit("ready");
+$("startBtn").onclick=async()=>{const r=await emitAck("startGame");if(!r?.ok)notify("lobbyNotice",r?.error||"Could not start.");else{selectedAction=false;voted=false;}};
+$("copyCode").onclick=()=>navigator.clipboard?.writeText(roomCode).then(()=>notify("lobbyNotice","Room code copied!"));
+$("helpBtn").onclick=async()=>{const r=await emitAck("action",{action:"help"});if(r?.ok){selectedAction=true;notify("actionNotice","Help submitted. Your action is locked.");}else notify("actionNotice",r?.error||"Could not submit action.");};
+$("sabotageBtn").onclick=async()=>{const r=await emitAck("action",{action:"sabotage"});if(r?.ok){selectedAction=true;notify("actionNotice","Sabotage submitted. Try to look innocent.");}else notify("actionNotice",r?.error||"Could not submit action.");};
+$("playAgain").onclick=()=>{myRole=null;selectedAction=false;voted=false;clearInterval(timerInt);show("home");};
+
+</script></body></html>
